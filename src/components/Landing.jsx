@@ -1,64 +1,233 @@
-import React from 'react';
-import { Sparkles, Zap, ChevronRight, MessageSquare, FolderKanban, BarChart3 } from 'lucide-react';
+/**
+ * Nexus AI - Gemini Integration Service
+ * Powers the smart AI assistant with Google's Gemini API
+ */
 
-export default function Landing({ setView, dark }) {
-  return (
-    <div className={`min-h-screen overflow-hidden relative ${dark ? 'bg-[#0a0a0f] text-white' : 'bg-white text-gray-900'}`}>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse top-20 -left-20"></div>
-        <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse top-40 right-20" style={{animationDelay:'2s'}}></div>
-        <div className="absolute w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse bottom-20 left-1/3" style={{animationDelay:'4s'}}></div>
-      </div>
-      
-      <nav className="relative z-10 px-6 py-6 flex justify-between items-center backdrop-blur-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/50">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Nexus AI</span>
-        </div>
-        <button onClick={() => setView('app')} className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg font-semibold hover:scale-105 transition text-white shadow-lg shadow-purple-500/50">
-          Get Started
-        </button>
-      </nav>
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-      <div className="relative z-10 text-center px-6 py-20 max-w-6xl mx-auto">
-        <div className="inline-block mb-6 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full backdrop-blur-sm animate-pulse">
-          <span className="text-purple-400 text-sm font-semibold flex items-center">
-            <Zap className="w-4 h-4 mr-2"/>Powered by Google Gemini AI
-          </span>
-        </div>
-        
-        <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
-          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">Your Smart</span>
-          <br/>
-          <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">Workspace</span>
-        </h1>
-        
-        <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-          Real AI-powered project management. Get intelligent hints tailored to YOUR projects.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
-          <button onClick={() => setView('app')} className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition text-white text-lg flex items-center justify-center shadow-xl shadow-purple-500/50">
-            Start Free <ChevronRight className="ml-2 w-5 h-5"/>
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {icon: MessageSquare, title: 'Real AI', desc: 'Google Gemini powers intelligent responses'},
-            {icon: FolderKanban, title: 'Smart Projects', desc: 'AI analyzes and gives personalized advice'},
-            {icon: BarChart3, title: 'Track Progress', desc: 'Monitor everything in real-time'}
-          ].map((f, i) => (
-            <div key={i} className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:scale-105 transition">
-              <f.icon className="w-12 h-12 text-purple-400 mb-4"/>
-              <h3 className="text-xl font-bold mb-2">{f.title}</h3>
-              <p className="text-gray-400">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+// Initialize Gemini AI
+const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+if (!API_KEY) {
+  console.error('⚠️ GEMINI API KEY NOT FOUND! Add REACT_APP_GEMINI_API_KEY to your .env file');
 }
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+
+// System prompt that defines Nexus AI's personality
+const NEXUS_SYSTEM_PROMPT = `You are Nexus AI, an intelligent project management assistant built to help users plan and execute their projects successfully.
+
+PERSONALITY:
+- Friendly, encouraging, and professional
+- Give actionable, specific advice (not generic tips)
+- Be concise but thorough
+- Focus on practical solutions
+
+YOUR ROLE:
+- Analyze project details and provide smart, personalized hints
+- Suggest tech stacks and tools based on project type
+- Create roadmaps and timelines
+- Help with problem-solving and decision-making
+- Offer team management and productivity tips
+
+IMPORTANT RULES:
+- NEVER say "I'm Gemini" or mention Google - you are NEXUS AI
+- Give SPECIFIC advice with examples, not generic tips
+- Keep responses under 300 words unless asked for more detail
+- Use markdown formatting (##, **, bullet points)
+- Be encouraging but honest about challenges
+
+When analyzing projects, consider: project type, progress, team size, timeline, and user's specific goals.`;
+
+// Get the Gemini model
+const getModel = () => {
+  if (!genAI) {
+    throw new Error('Gemini API not initialized. Check your API key.');
+  }
+  return genAI.getGenerativeModel({ 
+    model: "gemini-pro",
+    generationConfig: {
+      temperature: 0.9,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 2048,
+    },
+  });
+};
+
+/**
+ * Generate AI hints for a project
+ */
+export const generateProjectHints = async (project) => {
+  try {
+    const model = getModel();
+    
+    const prompt = `${NEXUS_SYSTEM_PROMPT}
+
+USER'S PROJECT:
+- Name: ${project.name}
+- Description: ${project.description || 'No description provided'}
+- Progress: ${project.progress}%
+- Team Size: ${project.team} members
+- Deadline: ${project.due}
+- Status: ${project.status}
+
+TASK: As Nexus AI, analyze this project and provide:
+1. **Smart Insights** - 5-7 specific, actionable hints for THIS project (not generic advice)
+2. **Recommended Tech Stack** - Suggest specific tools/frameworks if relevant
+3. **Next Steps** - Based on ${project.progress}% progress, what should they do NOW?
+4. **Potential Challenges** - What to watch out for
+
+Be specific to THIS project. Use markdown formatting. Be encouraging but practical.`;
+
+    console.log('🤖 Calling Gemini API for project hints...');
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    console.log('✅ Gemini API response received:', text.substring(0, 100) + '...');
+    return text;
+    
+  } catch (error) {
+    console.error('❌ Gemini API Error:', error);
+    return getFallbackHints(project);
+  }
+};
+
+/**
+ * Chat with Nexus AI
+ */
+export const chatWithNexus = async (userMessage, project = null, conversationHistory = []) => {
+  try {
+    const model = getModel();
+    
+    // Build context from conversation history (last 5 messages)
+    let contextMessages = conversationHistory.slice(-5).map(msg => 
+      `${msg.role === 'user' ? 'User' : 'Nexus AI'}: ${msg.content}`
+    ).join('\n');
+    
+    // Add project context if available
+    let projectContext = '';
+    if (project) {
+      projectContext = `\n\nCURRENT PROJECT CONTEXT:
+- Name: ${project.name}
+- Description: ${project.description || 'Not specified'}
+- Progress: ${project.progress}%
+- Team: ${project.team} members
+- Deadline: ${project.due}`;
+    }
+    
+    const prompt = `${NEXUS_SYSTEM_PROMPT}
+
+CONVERSATION HISTORY:
+${contextMessages}
+${projectContext}
+
+USER MESSAGE: ${userMessage}
+
+RESPOND AS NEXUS AI: Be helpful, specific, and actionable. If discussing the project, reference the context above. Keep it conversational and under 200 words unless more detail is requested. Use markdown formatting.`;
+
+    console.log('🤖 Calling Gemini API for chat...');
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    console.log('✅ Gemini chat response received');
+    return text;
+    
+  } catch (error) {
+    console.error('❌ Gemini API Error:', error);
+    return getFallbackResponse(userMessage, project);
+  }
+};
+
+/**
+ * Get roadmap suggestions from AI
+ */
+export const generateRoadmap = async (project) => {
+  try {
+    const model = getModel();
+    
+    const prompt = `${NEXUS_SYSTEM_PROMPT}
+
+PROJECT: ${project.name}
+DESCRIPTION: ${project.description || 'Not specified'}
+CURRENT PROGRESS: ${project.progress}%
+
+TASK: As Nexus AI, create a detailed project roadmap with 5 phases. For each phase include:
+- Phase name
+- Key tasks (3-5 specific tasks)
+- Estimated duration
+- Success criteria
+
+Format using markdown. Be specific to this project type.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+    
+  } catch (error) {
+    console.error('❌ Gemini API Error:', error);
+    return 'Unable to generate roadmap. Please check your API connection.';
+  }
+};
+
+// Fallback responses when API fails
+const getFallbackHints = (project) => {
+  return `## 🎯 Quick Hints for "${project.name}"
+
+**Note:** Using fallback mode (API connection issue)
+
+Based on your ${project.progress}% progress:
+
+**Next Steps:**
+- Break down remaining work into small, manageable tasks
+- Focus on core features before adding extras
+- Test frequently with real users
+- Document as you go
+
+**Tech Recommendations:**
+- Use proven, well-documented tools
+- Prioritize developer experience
+- Consider scalability from the start
+
+**Timeline Tips:**
+- Build in buffer time (20-30%)
+- Have weekly check-ins
+- Adjust scope if needed
+
+**⚠️ API Note:** For smarter, personalized hints, ensure your Gemini API key is configured correctly.`;
+};
+
+const getFallbackResponse = (message, project) => {
+  const responses = [
+    `I can help with project planning, tech decisions, and problem-solving! ${project ? `Let's focus on "${project.name}". ` : ''}What specific challenge are you facing?\n\n**Note:** Using fallback mode. Check API connection for smarter responses.`,
+    
+    `Here are some ways I can help:\n• Generate smart project hints\n• Suggest tech stacks and tools\n• Create roadmaps and timelines\n• Solve specific problems\n\nWhat would you like to explore?\n\n**Note:** API connection issue. Responses will be more generic.`,
+    
+    `${project ? `For "${project.name}", I recommend:` : 'Some general tips:'}\n• Start with the hardest problem\n• Ship early, iterate fast\n• Talk to users constantly\n• Keep scope minimal at first\n\nWhat specific area needs help?\n\n**Note:** Enable API for personalized advice.`
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+// Test API connection
+export const testGeminiConnection = async () => {
+  try {
+    if (!API_KEY) {
+      console.error('❌ No API key found');
+      return false;
+    }
+    const model = getModel();
+    const result = await model.generateContent('Say "Nexus AI is online!" in a friendly way.');
+    const response = await result.response;
+    console.log('✅ Gemini API Connected:', response.text());
+    return true;
+  } catch (error) {
+    console.error('❌ Gemini API Connection Failed:', error.message);
+    return false;
+  }
+};
+
+export default {
+  generateProjectHints,
+  chatWithNexus,
+  generateRoadmap,
+  testGeminiConnection
+};
