@@ -6,7 +6,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || 'AIzaSyC7n4xmPfv2JhXMoq55Og2qJXVJoGJ2Pmc';
+const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+if (!API_KEY) {
+  console.error('⚠️ GEMINI API KEY NOT FOUND! Add REACT_APP_GEMINI_API_KEY to your .env file');
+}
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // System prompt that defines Nexus AI's personality and capabilities
