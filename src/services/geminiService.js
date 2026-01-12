@@ -10,54 +10,45 @@ const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 if (!API_KEY) {
   console.error('⚠️ GEMINI API KEY NOT FOUND! Add REACT_APP_GEMINI_API_KEY to your .env file');
 }
-const genAI = new GoogleGenerativeAI(API_KEY);
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// System prompt that defines Nexus AI's personality and capabilities
-const NEXUS_SYSTEM_PROMPT = `You are Nexus AI, an intelligent project management assistant. Your role is to help users plan, manage, and execute their projects successfully.
+// System prompt that defines Nexus AI's personality
+const NEXUS_SYSTEM_PROMPT = `You are Nexus AI, an intelligent project management assistant built to help users plan and execute their projects successfully.
 
 PERSONALITY:
 - Friendly, encouraging, and professional
 - Give actionable, specific advice (not generic tips)
-- Use emojis sparingly but effectively
 - Be concise but thorough
 - Focus on practical solutions
 
-CAPABILITIES:
-- Analyze project details and provide smart hints
+YOUR ROLE:
+- Analyze project details and provide smart, personalized hints
 - Suggest tech stacks and tools based on project type
 - Create roadmaps and timelines
 - Help with problem-solving and decision-making
 - Offer team management and productivity tips
 
-ALWAYS:
-- Ask clarifying questions when needed
-- Provide specific examples and actionable steps
-- Reference current best practices and modern tools
-- Be honest about trade-offs and challenges
-- Keep responses under 300 words unless user asks for more detail
+IMPORTANT RULES:
+- NEVER say "I'm Gemini" or mention Google - you are NEXUS AI
+- Give SPECIFIC advice with examples, not generic tips
+- Keep responses under 300 words unless asked for more detail
+- Use markdown formatting (##, **, bullet points)
+- Be encouraging but honest about challenges
 
-NEVER:
-- Say "I'm Gemini" or mention Google - you are NEXUS AI
-- Give generic advice like "work hard" or "stay focused"
-- Recommend outdated tools or practices
-- Be overly formal or robotic
-
-When analyzing projects, consider:
-- Project type (web, mobile, AI, marketing, etc.)
-- Current progress and timeline
-- Team size and resources
-- Technical complexity
-- User's specific goals`;
+When analyzing projects, consider: project type, progress, team size, timeline, and user's specific goals.`;
 
 // Get the Gemini model
 const getModel = () => {
+  if (!genAI) {
+    throw new Error('Gemini API not initialized. Check your API key.');
+  }
   return genAI.getGenerativeModel({ 
     model: "gemini-pro",
     generationConfig: {
-      temperature: 0.7,
+      temperature: 0.9,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 2048,
     },
   });
 };
@@ -71,7 +62,7 @@ export const generateProjectHints = async (project) => {
     
     const prompt = `${NEXUS_SYSTEM_PROMPT}
 
-PROJECT DETAILS:
+USER'S PROJECT:
 - Name: ${project.name}
 - Description: ${project.description || 'No description provided'}
 - Progress: ${project.progress}%
@@ -79,20 +70,23 @@ PROJECT DETAILS:
 - Deadline: ${project.due}
 - Status: ${project.status}
 
-TASK: Analyze this project and provide:
-1. Smart, actionable hints specific to this project (5-7 hints)
-2. Recommended tech stack (if applicable)
-3. Key next steps based on current progress
-4. Potential challenges to watch out for
+TASK: As Nexus AI, analyze this project and provide:
+1. **Smart Insights** - 5-7 specific, actionable hints for THIS project (not generic advice)
+2. **Recommended Tech Stack** - Suggest specific tools/frameworks if relevant
+3. **Next Steps** - Based on ${project.progress}% progress, what should they do NOW?
+4. **Potential Challenges** - What to watch out for
 
-Format your response with clear sections and bullet points. Be specific to THIS project, not generic advice.`;
+Be specific to THIS project. Use markdown formatting. Be encouraging but practical.`;
 
+    console.log('🤖 Calling Gemini API for project hints...');
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+    console.log('✅ Gemini API response received:', text.substring(0, 100) + '...');
+    return text;
     
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('❌ Gemini API Error:', error);
     return getFallbackHints(project);
   }
 };
@@ -104,7 +98,7 @@ export const chatWithNexus = async (userMessage, project = null, conversationHis
   try {
     const model = getModel();
     
-    // Build context from conversation history
+    // Build context from conversation history (last 5 messages)
     let contextMessages = conversationHistory.slice(-5).map(msg => 
       `${msg.role === 'user' ? 'User' : 'Nexus AI'}: ${msg.content}`
     ).join('\n');
@@ -128,14 +122,17 @@ ${projectContext}
 
 USER MESSAGE: ${userMessage}
 
-INSTRUCTIONS: Respond as Nexus AI. Be helpful, specific, and actionable. If the user is asking about their project, reference the project context above. Keep your response conversational and under 200 words unless more detail is requested.`;
+RESPOND AS NEXUS AI: Be helpful, specific, and actionable. If discussing the project, reference the context above. Keep it conversational and under 200 words unless more detail is requested. Use markdown formatting.`;
 
+    console.log('🤖 Calling Gemini API for chat...');
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+    console.log('✅ Gemini chat response received');
+    return text;
     
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('❌ Gemini API Error:', error);
     return getFallbackResponse(userMessage, project);
   }
 };
@@ -153,95 +150,29 @@ PROJECT: ${project.name}
 DESCRIPTION: ${project.description || 'Not specified'}
 CURRENT PROGRESS: ${project.progress}%
 
-TASK: Create a detailed project roadmap with 5 phases. For each phase include:
+TASK: As Nexus AI, create a detailed project roadmap with 5 phases. For each phase include:
 - Phase name
-- Key tasks (3-5 tasks)
+- Key tasks (3-5 specific tasks)
 - Estimated duration
 - Success criteria
 
-Format as a clear, organized roadmap. Be specific to this project type.`;
+Format using markdown. Be specific to this project type.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
     
   } catch (error) {
-    console.error('Gemini API Error:', error);
-    return 'Unable to generate roadmap. Please try again.';
-  }
-};
-
-/**
- * Analyze project and suggest improvements
- */
-export const analyzeProject = async (project) => {
-  try {
-    const model = getModel();
-    
-    const prompt = `${NEXUS_SYSTEM_PROMPT}
-
-PROJECT ANALYSIS REQUEST
-Name: ${project.name}
-Description: ${project.description || 'Not specified'}
-Progress: ${project.progress}%
-Team: ${project.team} members
-Deadline: ${project.due}
-Status: ${project.status}
-
-TASK: Provide a comprehensive project analysis including:
-1. Current health assessment (Red/Yellow/Green)
-2. Key risks and challenges
-3. Optimization opportunities
-4. Resource allocation suggestions
-5. Timeline feasibility
-
-Be honest and constructive. Focus on actionable insights.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-    
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    return 'Unable to analyze project. Please try again.';
-  }
-};
-
-/**
- * Get AI suggestions for problem-solving
- */
-export const getProblemSolution = async (problem, project = null) => {
-  try {
-    const model = getModel();
-    
-    const projectInfo = project ? `\nProject Context: ${project.name} - ${project.description}` : '';
-    
-    const prompt = `${NEXUS_SYSTEM_PROMPT}
-
-USER'S PROBLEM: ${problem}${projectInfo}
-
-TASK: Help solve this problem with:
-1. Quick diagnosis of the issue
-2. 3-5 specific solutions (ranked by effectiveness)
-3. Pros/cons for each solution
-4. Recommended approach
-5. Resources or tools that might help
-
-Be practical and specific. Avoid generic advice.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-    
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    return 'Unable to generate solution. Please try again.';
+    console.error('❌ Gemini API Error:', error);
+    return 'Unable to generate roadmap. Please check your API connection.';
   }
 };
 
 // Fallback responses when API fails
 const getFallbackHints = (project) => {
   return `## 🎯 Quick Hints for "${project.name}"
+
+**Note:** Using fallback mode (API connection issue)
 
 Based on your ${project.progress}% progress:
 
@@ -261,16 +192,16 @@ Based on your ${project.progress}% progress:
 - Have weekly check-ins
 - Adjust scope if needed
 
-Need more specific advice? Try asking me about a particular challenge!`;
+**⚠️ API Note:** For smarter, personalized hints, ensure your Gemini API key is configured correctly.`;
 };
 
 const getFallbackResponse = (message, project) => {
   const responses = [
-    `I can help with project planning, tech decisions, and problem-solving! ${project ? `Let's focus on "${project.name}". ` : ''}What specific challenge are you facing?`,
+    `I can help with project planning, tech decisions, and problem-solving! ${project ? `Let's focus on "${project.name}". ` : ''}What specific challenge are you facing?\n\n**Note:** Using fallback mode. Check API connection for smarter responses.`,
     
-    `Here are some ways I can help:\n• Generate smart project hints\n• Suggest tech stacks and tools\n• Create roadmaps and timelines\n• Solve specific problems\n\nWhat would you like to explore?`,
+    `Here are some ways I can help:\n• Generate smart project hints\n• Suggest tech stacks and tools\n• Create roadmaps and timelines\n• Solve specific problems\n\nWhat would you like to explore?\n\n**Note:** API connection issue. Responses will be more generic.`,
     
-    `${project ? `For "${project.name}", I recommend:` : 'Some general tips:'}\n• Start with the hardest problem\n• Ship early, iterate fast\n• Talk to users constantly\n• Keep scope minimal at first\n\nWhat specific area needs help?`
+    `${project ? `For "${project.name}", I recommend:` : 'Some general tips:'}\n• Start with the hardest problem\n• Ship early, iterate fast\n• Talk to users constantly\n• Keep scope minimal at first\n\nWhat specific area needs help?\n\n**Note:** Enable API for personalized advice.`
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];
@@ -279,13 +210,17 @@ const getFallbackResponse = (message, project) => {
 // Test API connection
 export const testGeminiConnection = async () => {
   try {
+    if (!API_KEY) {
+      console.error('❌ No API key found');
+      return false;
+    }
     const model = getModel();
-    const result = await model.generateContent('Say "Nexus AI is ready!" in a friendly way.');
+    const result = await model.generateContent('Say "Nexus AI is online!" in a friendly way.');
     const response = await result.response;
     console.log('✅ Gemini API Connected:', response.text());
     return true;
   } catch (error) {
-    console.error('❌ Gemini API Connection Failed:', error);
+    console.error('❌ Gemini API Connection Failed:', error.message);
     return false;
   }
 };
@@ -294,7 +229,5 @@ export default {
   generateProjectHints,
   chatWithNexus,
   generateRoadmap,
-  analyzeProject,
-  getProblemSolution,
   testGeminiConnection
 };
