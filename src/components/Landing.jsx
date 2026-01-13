@@ -17,21 +17,20 @@ export default function Landing({ setView, dark }) {
       
       <nav className="relative z-10 px-6 py-6 flex justify-between items-center backdrop-blur-md">
         <div className="flex items-center space-x-3">
-          {/* SICK LOGO */}
+          {/* SICK LOGO: NX */}
           <div className="relative w-12 h-12 group cursor-pointer">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 rounded-xl blur-lg group-hover:blur-xl transition"></div>
             <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 rounded-xl flex items-center justify-center shadow-2xl border border-white/20 group-hover:scale-110 transition-transform">
-              <div className="relative">
-                <Cpu className="w-7 h-7 text-white absolute animate-pulse" />
-                <Sparkles className="w-6 h-6 text-white relative" />
-              </div>
+              <span className="text-xl font-black tracking-tighter text-white drop-shadow-md">NX</span>
+              {/* Subtle accent spark */}
+              <Zap className="w-3 h-3 text-cyan-300 absolute top-1 right-1 animate-pulse" />
             </div>
           </div>
           <div>
             <span className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
               NEXUS<span className="text-blue-400">.</span>AI
             </span>
-            <div className="text-[10px] text-gray-400 -mt-1 tracking-widest">INTELLIGENT WORKSPACE</div>
+            <div className="text-[10px] text-gray-400 -mt-1 tracking-widest uppercase">Intelligent Workspace</div>
           </div>
         </div>
         
