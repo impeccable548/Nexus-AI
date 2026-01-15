@@ -1,4 +1,3 @@
-
 /**
  * Nexus AI - Frontend Service
  * Calls backend API (keeps Gemini key secure)
@@ -13,7 +12,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 export const generateProjectHints = async (project) => {
   try {
     console.log('🤖 Calling backend for project hints...');
-
+    
     const response = await fetch(`${API_URL}/project-hints`, {
       method: 'POST',
       headers: {
@@ -23,14 +22,14 @@ export const generateProjectHints = async (project) => {
     });
 
     const data = await response.json();
-
+    
     if (!data.success) {
       throw new Error(data.error || 'Failed to generate hints');
     }
 
     console.log('✅ Project hints received');
     return data.hints;
-
+    
   } catch (error) {
     console.error('❌ Error generating hints:', error);
     return getFallbackHints(project);
@@ -43,7 +42,7 @@ export const generateProjectHints = async (project) => {
 export const chatWithNexus = async (userMessage, project = null, conversationHistory = []) => {
   try {
     console.log('🤖 Calling backend for chat...');
-
+    
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: {
@@ -57,14 +56,14 @@ export const chatWithNexus = async (userMessage, project = null, conversationHis
     });
 
     const data = await response.json();
-
+    
     if (!data.success) {
       throw new Error(data.error || 'Failed to get response');
     }
 
     console.log('✅ Chat response received');
     return data.response;
-
+    
   } catch (error) {
     console.error('❌ Error in chat:', error);
     return getFallbackResponse(userMessage, project);
@@ -77,7 +76,7 @@ export const chatWithNexus = async (userMessage, project = null, conversationHis
 export const generateRoadmap = async (project) => {
   try {
     console.log('🤖 Calling backend for roadmap...');
-
+    
     const response = await fetch(`${API_URL}/roadmap`, {
       method: 'POST',
       headers: {
@@ -87,14 +86,14 @@ export const generateRoadmap = async (project) => {
     });
 
     const data = await response.json();
-
+    
     if (!data.success) {
       throw new Error(data.error || 'Failed to generate roadmap');
     }
 
     console.log('✅ Roadmap received');
     return data.roadmap;
-
+    
   } catch (error) {
     console.error('❌ Error generating roadmap:', error);
     return 'Unable to generate roadmap. Please try again.';
@@ -108,7 +107,7 @@ export const testGeminiConnection = async () => {
   try {
     const response = await fetch(`${API_URL}/test`);
     const data = await response.json();
-
+    
     if (data.success) {
       console.log('✅ Backend connected:', data.message);
       return true;
