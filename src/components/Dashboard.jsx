@@ -59,6 +59,7 @@ export default function Dashboard({ projects, setProjects, dark, setDark }) {
     }
   };
 
+
   const sendMsg = async () => {
     if (!input.trim()) return;
     setMessages(prev => [...prev, {role: 'user', content: input}]);
