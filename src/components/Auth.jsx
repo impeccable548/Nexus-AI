@@ -35,13 +35,21 @@ export default function Auth({ onSuccess }) {
         }
 
         const result = await signUp(email, password, fullName);
-        if (result.success) {
-          setError('');
-          alert('✅ Account created! Please check your email to verify.');
-          setIsLogin(true);
-        } else {
-          setError(result.error || 'Signup failed');
-        }
+if (result.success) {
+  setError('');
+  
+  // Check if email confirmation is required
+  if (result.data.user && !result.data.session) {
+    alert('✅ Account created! Please check your email to verify your account.');
+    setIsLogin(true);
+  } else {
+    // Auto-login after signup (if email confirmation is disabled)
+    alert('✅ Account created! Logging you in...');
+    onSuccess?.();
+  }
+} else {
+  setError(result.error || 'Signup failed');
+}
       }
     } catch (err) {
       setError(err.message || 'Something went wrong');
