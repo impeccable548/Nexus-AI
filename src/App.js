@@ -47,17 +47,32 @@ function AppContent() {
     if (!loading) {
       if (user) {
         // If logged in and on landing/auth, go to dashboard
-        if (view === 'landing' || view === 'auth') {
-          setView('dashboard');
-        }
-      } else {
-        // If not logged in and trying to access protected routes
-        if (view === 'dashboard' || view === 'admin') {
-          setView('landing');
-        }
-      }
-    }
-  }, [user, loading, view]);
+        // At the bottom of your component
+// 1. Check loading FIRST to avoid showing the landing page for 1 second while auth loads
+if (loading) {
+  return <div className="loader">Loading...</div>;
+}
+
+// 2. Now render based on state
+if (view === 'dashboard') {
+  return (
+    <ProtectedRoute>
+      <UserDashboard 
+        dark={dark} 
+        setDark={setDark}
+        onNavigateToAdmin={() => setView('admin')}
+      />
+    </ProtectedRoute>
+  );
+}
+
+if (view === 'admin') {
+  return <AdminPanel />; 
+}
+
+// 3. Fallback (Landing or Auth)
+return <LandingPage />;
+
 
   // Theme management
   useEffect(() => {
