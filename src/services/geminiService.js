@@ -156,9 +156,11 @@ const getFallbackResponse = (message, project) => {
   return `I can help with project planning and problem-solving! ${project ? `Let's focus on "${project.name}". ` : ''}What specific challenge are you facing?\n\n**⚠️ Note:** Backend unavailable. Reconnect for smarter AI responses.`;
 };
 
-export default {
+const geminiService = {
   generateProjectHints,
   chatWithNexus,
   generateRoadmap,
   testGeminiConnection
 };
+
+export default geminiService;
