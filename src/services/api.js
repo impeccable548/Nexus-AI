@@ -107,7 +107,7 @@ export const generateRoadmap = async (project) => {
   });
 };
 
-export default {
+const apiService = {
   signUp,
   login,
   logout,
@@ -121,3 +121,5 @@ export default {
   chatWithAI,
   generateRoadmap,
 };
+
+export default apiService;
