@@ -3,11 +3,10 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { 
   Shield, Users, FolderKanban, Activity, ArrowLeft, 
-  Search, Trash2, Crown, Ban, CheckCircle, XCircle,
-  BarChart3, Database, Clock, TrendingUp, Moon, Sun,
+  Search, Trash2, Crown,
+  BarChart3, Database, TrendingUp, Moon, Sun,
   User, Mail, Calendar, Loader2
 } from 'lucide-react';
-
 export default function AdminDashboard({ dark, setDark, onNavigateToDashboard }) {
   const { profile } = useAuth();
   const [view, setView] = useState('overview'); // overview, users, projects, actions
