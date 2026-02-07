@@ -403,36 +403,74 @@ export default function UserDashboard({ dark, setDark, onNavigateToAdmin }) {
                     </button>
                   </div>
                   {projects.length===0 ? (
-                    <div className={`p-12 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border text-center}> <FolderKanban className="w-16 h-16 text-purple-400 mx-auto mb-4"/> <h3 className="text-xl font-bold mb-2">No projects</h3> <button onClick={()=>setShowModal(true)} className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-white inline-flex items-center"> <Plus className="w-5 h-5 mr-2"/>Create </button> </div> ) : ( <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"> {projects.map(p=>( <div key={p.id} className={p-6 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border hover:scale-105 transition group}> <div className="flex items-start justify-between mb-4"> {p.logo_url?<img src={p.logo_url} alt={p.name} className="w-12 h-12 rounded-lg object-cover"/>:<div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center"><FolderKanban className="w-6 h-6 text-white"/></div>} <div className="flex space-x-1 opacity-0 group-hover:opacity-100"> <button onClick={()=>{setCurrentProject(p);setView('chat');}} className={p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}} title="Get AI hints"> <Lightbulb className="w-4 h-4 text-yellow-400"/> </button> <button onClick={()=>{setEditingProject(p);setProjectForm({name:p.name,description:p.description,logo_url:p.logo_url});setShowModal(true);}} className={p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}} title="Edit"> <Edit className="w-4 h-4 text-blue-400"/> </button> <button onClick={()=>deleteProject(p.id)} className={p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}} title="Delete"> <Trash2 className="w-4 h-4 text-red-400"/> </button> </div> </div> <h3 className="text-xl font-bold mb-2">{p.name}</h3> {p.description && <p className={text-sm mb-3 ${dark?'text-gray-400':'text-gray-600'}}>{p.description.slice(0,100)}</p>} <div className="flex justify-between text-sm mb-4"> <span className="text-gray-400">{p.team_size} members</span> <span className={px-2 py-1 rounded ${p.status==='active'?'bg-green-500/20 text-green-400':'bg-gray-500/20 text-gray-400'}}>{p.status}</span> </div> <div> <div className="flex justify-between mb-2"> <span className="text-sm text-gray-400">Progress</span> <span className="text-sm font-semibold">{p.progress}%</span> </div> <div className={w-full h-2 rounded-full {dark?'bg-gray-700':'bg-gray-200'}{p.progress}%`}}>
+                    <div className={`p-12 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border text-center`}>
+                      <FolderKanban className="w-16 h-16 text-purple-400 mx-auto mb-4"/>
+                      <h3 className="text-xl font-bold mb-2">No projects</h3>
+                      <button onClick={()=>setShowModal(true)} className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-white inline-flex items-center">
+                        <Plus className="w-5 h-5 mr-2"/>Create
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {projects.map(p=>(
+                        <div key={p.id} className={`p-6 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border hover:scale-105 transition group`}>
+                          <div className="flex items-start justify-between mb-4">
+                            {p.logo_url?<img src={p.logo_url} alt={p.name} className="w-12 h-12 rounded-lg object-cover"/>:<div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center"><FolderKanban className="w-6 h-6 text-white"/></div>}
+                            <div className="flex space-x-1 opacity-0 group-hover:opacity-100">
+                              <button onClick={()=>{setCurrentProject(p);setView('chat');}} className={`p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}`} title="Get AI hints">
+                                <Lightbulb className="w-4 h-4 text-yellow-400"/>
+                              </button>
+                              <button onClick={()=>{setEditingProject(p);setProjectForm({name:p.name,description:p.description,logo_url:p.logo_url});setShowModal(true);}} className={`p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}`} title="Edit">
+                                <Edit className="w-4 h-4 text-blue-400"/>
+                              </button>
+                              <button onClick={()=>deleteProject(p.id)} className={`p-2 rounded-lg ${dark?'hover:bg-gray-700':'hover:bg-gray-100'}`} title="Delete">
+                                <Trash2 className="w-4 h-4 text-red-400"/>
+                              </button>
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold mb-2">{p.name}</h3>
+                          {p.description && <p className={`text-sm mb-3 ${dark?'text-gray-400':'text-gray-600'}`}>{p.description.slice(0,100)}</p>}
+                          <div className="flex justify-between text-sm mb-4">
+                            <span className="text-gray-400">{p.team_size} members</span>
+                            <span className={`px-2 py-1 rounded ${p.status==='active'?'bg-green-500/20 text-green-400':'bg-gray-500/20 text-gray-400'}`}>{p.status}</span>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-2">
+                              <span className="text-sm text-gray-400">Progress</span>
+                              <span className="text-sm font-semibold">{p.progress}%</span>
+                            </div>
+                            <div className={`w-full h-2 rounded-full ${dark?'bg-gray-700':'bg-gray-200'}`}>
+                              <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{width:`${p.progress}%`}}></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-
-
-))}
-
-)}
-
-)}
-{view==='anal' && (
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold">Analytics</h1>
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  {l:'Total',v:projects.length},
-                  {l:'Active',v:projects.filter(p=>p.status==='active').length},
-                  {l:'Avg',v:`${projects.length>0?Math.round(projects.reduce((a,p)=>a+p.progress,0)/projects.length):0}%`}
-                ].map((m,i)=>(
-                  <div key={i} className={`p-6 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border`}>
-                    <div className={`text-sm ${dark?'text-gray-400':'text-gray-600'}`}>{m.l}</div>
-                    <div className="text-3xl font-bold mt-2">{m.v}</div>
+              {view==='anal' && (
+                <div className="space-y-6">
+                  <h1 className="text-3xl font-bold">Analytics</h1>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {[
+                      {l:'Total',v:projects.length},
+                      {l:'Active',v:projects.filter(p=>p.status==='active').length},
+                      {l:'Avg',v:`${projects.length>0?Math.round(projects.reduce((a,p)=>a+p.progress,0)/projects.length):0}%`}
+                    ].map((m,i)=>(
+                      <div key={i} className={`p-6 rounded-2xl ${dark?'bg-gray-800/50 border-gray-700':'bg-white border-gray-200'} border`}>
+                        <div className={`text-sm ${dark?'text-gray-400':'text-gray-600'}`}>{m.l}</div>
+                        <div className="text-3xl font-bold mt-2">{m.v}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-);
+  );
 }
