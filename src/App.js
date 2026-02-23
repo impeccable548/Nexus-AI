@@ -36,43 +36,26 @@ function ProtectedRoute({ children, adminOnly = false }) {
   return children;
 }
 
-// Main App Component (wrapped in AuthProvider)
+// Main App Component
 function AppContent() {
-  const [view, setView] = useState('landing'); // 'landing', 'auth', 'dashboard', 'admin'
+  const [view, setView] = useState('landing');
   const [dark, setDark] = useState(true);
-  const { user, loading } = useAuth();  // ✅ Removed isAdmin
+  const { user, isAdmin, loading } = useAuth();
 
   // Auto-redirect based on auth state
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // If logged in and on landing/auth, go to dashboard
-        // At the bottom of your component
-// 1. Check loading FIRST to avoid showing the landing page for 1 second while auth loads
-if (loading) {
-  return <div className="loader">Loading...</div>;
-}
-
-// 2. Now render based on state
-if (view === 'dashboard') {
-  return (
-    <ProtectedRoute>
-      <UserDashboard 
-        dark={dark} 
-        setDark={setDark}
-        onNavigateToAdmin={() => setView('admin')}
-      />
-    </ProtectedRoute>
-  );
-}
-
-if (view === 'admin') {
-  return <AdminPanel />; 
-}
-
-// 3. Fallback (Landing or Auth)
-return <LandingPage />;
-
+        if (view === 'landing' || view === 'auth') {
+          setView('dashboard');
+        }
+      } else {
+        if (view === 'dashboard' || view === 'admin') {
+          setView('landing');
+        }
+      }
+    }
+  }, [user, loading, view]);
 
   // Theme management
   useEffect(() => {
@@ -91,17 +74,14 @@ return <LandingPage />;
     );
   }
 
-  // Landing Page
   if (view === 'landing' && !user) {
     return <Landing setView={setView} dark={dark} />;
   }
 
-  // Auth Page
   if (view === 'auth' || (!user && view !== 'landing')) {
     return <Auth onSuccess={() => setView('dashboard')} />;
   }
 
-  // User Dashboard
   if (view === 'dashboard') {
     return (
       <ProtectedRoute>
@@ -114,7 +94,6 @@ return <LandingPage />;
     );
   }
 
-  // Admin Dashboard
   if (view === 'admin') {
     return (
       <ProtectedRoute adminOnly={true}>
