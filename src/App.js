@@ -40,7 +40,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
 function AppContent() {
   const [view, setView] = useState('landing');
   const [dark, setDark] = useState(true);
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();  // ✅ Removed isAdmin - not used here
 
   // Auto-redirect based on auth state
   useEffect(() => {
