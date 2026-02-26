@@ -14,7 +14,8 @@ export default function Landing({ setView, dark }) {
 
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40"></div>
-      
+
+      {/* Navbar */}
       <nav className="relative z-10 px-6 py-6 flex justify-between items-center backdrop-blur-md">
         <div className="flex items-center space-x-3">
           {/* SICK LOGO: NX */}
@@ -33,15 +34,16 @@ export default function Landing({ setView, dark }) {
             <div className="text-[10px] text-gray-400 -mt-1 tracking-widest uppercase">Intelligent Workspace</div>
           </div>
         </div>
-        
+
         <div className="hidden md:flex items-center space-x-6 text-sm">
           <button className="text-gray-300 hover:text-white transition font-medium">Features</button>
           <button className="text-gray-300 hover:text-white transition font-medium">Pricing</button>
           <button className="text-gray-300 hover:text-white transition font-medium">Docs</button>
         </div>
-        
-        <button 
-          onClick={() => setView('app')} 
+
+        {/* ✅ FIX 1: Navbar "Launch App" button */}
+        <button
+          onClick={() => setView('auth')}
           className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 transition-all text-white"
         >
           Launch App
@@ -57,7 +59,7 @@ export default function Landing({ setView, dark }) {
           </span>
           <Sparkles className="w-4 h-4 ml-2 text-blue-400" />
         </div>
-        
+
         {/* Hero Title */}
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-tight">
           <span className="block mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
@@ -67,15 +69,16 @@ export default function Landing({ setView, dark }) {
             Ship Faster
           </span>
         </h1>
-        
+
         <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
           The AI-powered workspace that understands YOUR projects. Get intelligent hints, smart recommendations, and personalized guidance in real-time.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
-          <button 
-            onClick={() => setView('app')} 
+          {/* ✅ FIX 2: Main hero "Start Building Free" button */}
+          <button
+            onClick={() => setView('auth')}
             className="group px-8 py-5 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-2xl font-bold hover:scale-105 transition-all text-white text-lg shadow-2xl shadow-purple-500/50 hover:shadow-purple-500/70 relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center justify-center">
@@ -85,7 +88,7 @@ export default function Landing({ setView, dark }) {
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-600 opacity-0 group-hover:opacity-100 transition"></div>
           </button>
-          
+
           <button className="px-8 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/20 rounded-2xl font-bold hover:bg-white/10 hover:border-white/30 transition text-white text-lg hover:scale-105 shadow-xl">
             Watch Demo
           </button>
@@ -94,33 +97,33 @@ export default function Landing({ setView, dark }) {
         {/* Feature Cards */}
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {[
-            { 
-              icon: MessageSquare, 
-              title: 'Real AI Intelligence', 
+            {
+              icon: MessageSquare,
+              title: 'Real AI Intelligence',
               desc: 'Not scripted responses - actual Gemini AI that understands context',
               gradient: 'from-purple-500/20 to-blue-500/20',
               iconColor: 'text-purple-400'
             },
-            { 
-              icon: FolderKanban, 
-              title: 'Smart Project Insights', 
+            {
+              icon: FolderKanban,
+              title: 'Smart Project Insights',
               desc: 'AI analyzes your work and gives personalized, actionable advice',
               gradient: 'from-blue-500/20 to-cyan-500/20',
               iconColor: 'text-blue-400'
             },
-            { 
-              icon: BarChart3, 
-              title: 'Intelligent Analytics', 
+            {
+              icon: BarChart3,
+              title: 'Intelligent Analytics',
               desc: 'Track progress with AI-powered insights and recommendations',
               gradient: 'from-cyan-500/20 to-purple-500/20',
               iconColor: 'text-cyan-400'
             }
           ].map((feature, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className={`group p-8 bg-gradient-to-br ${feature.gradient} backdrop-blur-2xl border border-white/10 rounded-3xl hover:scale-105 hover:border-white/30 transition-all duration-300 shadow-2xl hover:shadow-purple-500/20`}
             >
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
                 <feature.icon className={`w-8 h-8 ${feature.iconColor}`} />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-white">{feature.title}</h3>
@@ -157,8 +160,9 @@ export default function Landing({ setView, dark }) {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Join developers using real AI to accelerate their projects
           </p>
-          <button 
-            onClick={() => setView('app')}
+          {/* ✅ FIX 3: Bottom "Get Started Now" button */}
+          <button
+            onClick={() => setView('auth')}
             className="px-10 py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold text-xl hover:scale-105 transition-all text-white shadow-2xl shadow-purple-500/50 inline-flex items-center"
           >
             <Rocket className="w-6 h-6 mr-2" />
