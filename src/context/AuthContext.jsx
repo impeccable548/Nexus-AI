@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';  // ✅ Removed getCurrentUser
+import { supabase } from '../lib/supabase';
+
 const AuthContext = createContext({});
 
 export const useAuth = () => {
@@ -17,42 +18,68 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
 
-  // Fetch user profile from backend
-  const fetchProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+  // Fetch user profile with retry logic
+  // Retries up to 3 times with a 500ms delay to handle RLS timing race conditions
+  const fetchProfile = async (userId, retries = 3) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (error) throw error;
-      
-      setProfile(data);
-      setIsAdmin(data?.is_admin || false);
-      
-      console.log('✅ Profile loaded:', data);
-      console.log('🔐 Admin status:', data?.is_admin);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setProfile(null);
-      setIsAdmin(false);
+        if (error) throw error;
+
+        if (data) {
+          setProfile(data);
+          setIsAdmin(data?.is_admin || false);
+          console.log('✅ Profile loaded:', data);
+          console.log('🔐 Admin status:', data?.is_admin);
+          return data; // success - exit
+        }
+      } catch (error) {
+        console.warn(`⚠️ Profile fetch attempt ${attempt} failed:`, error.message);
+
+        if (attempt < retries) {
+          // Wait 500ms before retrying
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          console.error('❌ All profile fetch attempts failed');
+          setProfile(null);
+          setIsAdmin(false);
+        }
+      }
     }
+  };
+
+  // Build an immediate profile from user metadata
+  // This ensures full_name shows instantly while fetchProfile runs in background
+  const buildOptimisticProfile = (authUser) => {
+    return {
+      id: authUser.id,
+      email: authUser.email,
+      full_name: authUser.user_metadata?.full_name || null,
+      avatar_url: authUser.user_metadata?.avatar_url || null,
+      is_admin: false, // will be overwritten once fetchProfile resolves
+    };
   };
 
   // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Get current session
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) throw error;
 
         setSession(session);
         setUser(session?.user || null);
 
         if (session?.user) {
+          // Set optimistic profile immediately so name shows right away
+          setProfile(buildOptimisticProfile(session.user));
+          // Then fetch real profile from DB in background
           await fetchProfile(session.user.id);
         }
       } catch (error) {
@@ -64,16 +91,24 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
 
-    // Listen for auth changes
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 Auth state changed:', event);
-        
+
         setSession(session);
         setUser(session?.user || null);
 
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          // Set optimistic profile immediately from metadata
+          setProfile(buildOptimisticProfile(session.user));
+
+          // On signup the trigger needs a moment to run before we can fetch
+          const delay = event === 'SIGNED_IN' ? 800 : 0;
+
+          setTimeout(async () => {
+            await fetchProfile(session.user.id);
+          }, delay);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -148,7 +183,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Refresh profile (useful after updates)
+  // Refresh profile manually (useful after profile updates)
   const refreshProfile = async () => {
     if (user) {
       await fetchProfile(user.id);
